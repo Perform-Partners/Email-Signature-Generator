@@ -47,6 +47,11 @@
     .options {
       margin-top: 20px;
     }
+    .signature-preview {
+      border-top: 1px solid #ccc;
+      margin-top: 30px;
+      padding-top: 20px;
+    }
     button {
       margin-top: 20px;
       padding: 10px 20px;
@@ -67,10 +72,11 @@
       width: 100%;
       font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
       font-size: 12px;
+      color: #203031;
     }
     .outlook-dark-preview {
-      background-color: #1E1E1E;
-      color: #F8F9F2;
+      background-color: #1E1E1E !important;
+      color: #F8F9F2 !important;
     }
   </style>
   <script>
@@ -82,22 +88,7 @@
 
     function togglePreviewDarkMode() {
       const preview = document.getElementById('previewWindow');
-      const isDark = preview.classList.toggle('outlook-dark-preview');
-
-      const elements = preview.querySelectorAll('*');
-      elements.forEach(el => {
-        if (isDark) {
-          if (!el.dataset.origColor && el.style.color)
-            el.dataset.origColor = el.style.color;
-          if (!el.dataset.origBg && el.style.backgroundColor)
-            el.dataset.origBg = el.style.backgroundColor;
-          el.style.color = '#F8F9F2';
-          el.style.backgroundColor = '#1E1E1E';
-        } else {
-          if (el.dataset.origColor) el.style.color = el.dataset.origColor;
-          if (el.dataset.origBg) el.style.backgroundColor = el.dataset.origBg;
-        }
-      });
+      preview.classList.toggle('outlook-dark-preview');
     }
 
     function saveField(id) {
@@ -109,7 +100,7 @@
       }
     }
 
-    window.onload = function () {
+    window.onload = function() {
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
       }
@@ -128,7 +119,7 @@
       });
     }
 
-    function generateSignature() {
+    function generateSignature(apollo = false) {
       const name = document.getElementById('fullName').value;
       const title = document.getElementById('jobTitle').value;
       const email = document.getElementById('email').value;
@@ -146,31 +137,41 @@
       PERFORM<span style="font-weight: normal;">PARTNERS</span>
     </span><br><br>
 
-    <span style="font-family: Arial, sans-serif; font-size: 12px;">
-      E: <a href="mailto:${email}" style="color: #0563C1;">${email}</a><br>
-      W: <a href="http://www.perform-partners.com" target="_blank" style="color: #0563C1;">www.perform-partners.com</a><br><br>
-`;
+    <span style="font-family: Arial, sans-serif; font-size: 12px;">`;
 
-      if (showMeeting && meeting) {
-        html += `Book a meeting: <a href="${meeting}" target="_blank" style="color: #0563C1;">${meeting}</a><br><br>`;
-      }
-
-      if (showSocials) {
+      if (!apollo) {
         html += `
+      E: <a href="mailto:${email}" style="color: #0563C1;">${email}</a><br>
+      W: <a href="http://www.perform-partners.com" target="_blank" style="color: #0563C1;">www.perform-partners.com</a><br><br>`;
+        if (showMeeting && meeting) {
+          html += `Book a meeting: <a href="${meeting}" target="_blank" style="color: #0563C1;">${meeting}</a><br><br>`;
+        }
+        if (showSocials) {
+          html += `
       <span style="font-size: 11px; margin-top: 11px; margin-bottom: 11px; color: #0563C1;">
         <a href="https://www.linkedin.com/company/perform-partners" target="_blank" style="color: #0563C1;">LinkedIn</a>&nbsp;&nbsp;&nbsp;
         <a href="https://www.instagram.com/performpartners/" target="_blank" style="color: #0563C1;">Instagram</a>&nbsp;&nbsp;&nbsp;
         <a href="https://open.spotify.com/show/1v7X3C2U6yEmuUwAhLk5uG" target="_blank" style="color: #0563C1;">Spotify</a>
-      </span><br><br>
-        `;
+      </span><br><br>`;
+        }
+      } else {
+        html += `
+      E: ${email}<br>
+      W: www.perform-partners.com<br><br>`;
       }
 
       html += `
-    </span>
+    </span>`;
+
+      if (!apollo) {
+        html += `
     <div style="padding: 10px 0;">
       <img src="https://perform-partners.com/wp-content/uploads/2023/10/Icon-emerald.png" alt="Icon" width="20" height="20" style="vertical-align: middle; margin-right: 5px;">
       <span style="font-size: 18px; vertical-align: middle;">&nbsp;We are experts in <span style="color: #00B050;">change</span></span>
-    </div>
+    </div>`;
+      }
+
+      html += `
     <div style="font-size: 8px; padding-top: 5px;">
       Perform Partners Ltd. Registered in England. Company No: 11606816.<br>
       Registered office: Platform, New Station St, Leeds, LS1 4JB. VAT number: 309020543
@@ -182,33 +183,6 @@
       document.getElementById('previewWindow').innerHTML = html;
     }
 
-    function cleanForApollo() {
-      const rawHtml = document.getElementById('output').value;
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(rawHtml, 'text/html');
-
-      doc.querySelectorAll('a').forEach(a => {
-        const span = document.createElement('span');
-        span.textContent = a.textContent;
-        a.replaceWith(span);
-      });
-
-      doc.querySelectorAll('img').forEach(img => img.remove());
-
-      const cleanedHtml = doc.body.innerHTML;
-      document.getElementById('output').value = cleanedHtml;
-      document.getElementById('previewWindow').innerHTML = cleanedHtml;
-    }
-
-    function downloadApolloHTML() {
-      const content = document.getElementById('output').value;
-      const blob = new Blob([content], { type: 'text/html' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'download_apollo.html';
-      link.click();
-    }
-
     function copyToClipboard() {
       const textarea = document.getElementById('output');
       textarea.select();
@@ -217,12 +191,12 @@
       alert('Signature HTML copied to clipboard!');
     }
 
-    function downloadHTML() {
+    function downloadHTML(apollo = false) {
       const content = document.getElementById('output').value;
       const blob = new Blob([content], { type: 'text/html' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'email_signature.htm';
+      link.download = apollo ? 'downloadapollo.html' : 'email_signature.html';
       link.click();
     }
   </script>
@@ -255,20 +229,20 @@
   </div>
 
   <button onclick="generateSignature()">Generate Signature</button>
-  <button onclick="cleanForApollo()">Email Signature for Apollo</button>
-  <button onclick="downloadApolloHTML()">Download as Apollo HTML</button>
+  <button onclick="generateSignature(true)">Email signature for Apollo</button>
 
   <div class="flex-container">
     <div style="flex: 1;">
       <h3>Generated HTML Code:</h3>
       <textarea id="output" readonly></textarea>
       <button onclick="copyToClipboard()">Copy to Clipboard</button>
+      <button onclick="downloadHTML()">Download as .html</button>
+      <button onclick="downloadHTML(true)">Download Apollo .html</button>
     </div>
     <div style="flex: 1;">
       <h3>Signature Preview:</h3>
       <div id="previewWindow"></div>
       <button onclick="togglePreviewDarkMode()">Toggle Preview Dark Mode</button>
-      <button onclick="downloadHTML()">Download as .html</button>
     </div>
   </div>
 </body>
