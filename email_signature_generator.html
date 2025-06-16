@@ -47,11 +47,6 @@
     .options {
       margin-top: 20px;
     }
-    .signature-preview {
-      border-top: 1px solid #ccc;
-      margin-top: 30px;
-      padding-top: 20px;
-    }
     button {
       margin-top: 20px;
       padding: 10px 20px;
@@ -87,7 +82,20 @@
 
     function togglePreviewDarkMode() {
       const preview = document.getElementById('previewWindow');
-      preview.classList.toggle('outlook-dark-preview');
+      const isDark = preview.classList.toggle('outlook-dark-preview');
+
+      const elements = preview.querySelectorAll('*');
+      elements.forEach(el => {
+        if (isDark) {
+          if (el.style.color) el.dataset.origColor = el.style.color;
+          if (el.style.backgroundColor) el.dataset.origBg = el.style.backgroundColor;
+          el.style.color = '#F8F9F2';
+          el.style.backgroundColor = '#1E1E1E';
+        } else {
+          if (el.dataset.origColor) el.style.color = el.dataset.origColor;
+          if (el.dataset.origBg) el.style.backgroundColor = el.dataset.origBg;
+        }
+      });
     }
 
     function saveField(id) {
@@ -99,7 +107,7 @@
       }
     }
 
-    window.onload = function() {
+    window.onload = function () {
       if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
       }
@@ -188,6 +196,34 @@
       link.download = 'email_signature.htm';
       link.click();
     }
+
+    function cleanForApollo() {
+      const rawHtml = document.getElementById('output').value;
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(rawHtml, 'text/html');
+
+      doc.querySelectorAll('a').forEach(a => {
+        const span = document.createElement('span');
+        span.textContent = a.textContent;
+        a.replaceWith(span);
+      });
+
+      doc.querySelectorAll('img').forEach(img => img.remove());
+
+      const cleanedHtml = doc.body.innerHTML;
+      document.getElementById('output').value = cleanedHtml;
+      document.getElementById('previewWindow').innerHTML = cleanedHtml;
+    }
+
+    function downloadApolloHTML() {
+      const content = document.getElementById('output').value;
+      const blob = new Blob([content], { type: 'text/html' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'download_apollo.html';
+      link.click();
+    }
   </script>
 </head>
 <body>
@@ -218,6 +254,8 @@
   </div>
 
   <button onclick="generateSignature()">Generate Signature</button>
+  <button onclick="cleanForApollo()">Email Signature for Apollo</button>
+  <button onclick="downloadApolloHTML()">Download as Apollo HTML</button>
 
   <div class="flex-container">
     <div style="flex: 1;">
