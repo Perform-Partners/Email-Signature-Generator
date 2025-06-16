@@ -87,8 +87,10 @@
       const elements = preview.querySelectorAll('*');
       elements.forEach(el => {
         if (isDark) {
-          if (el.style.color) el.dataset.origColor = el.style.color;
-          if (el.style.backgroundColor) el.dataset.origBg = el.style.backgroundColor;
+          if (!el.dataset.origColor && el.style.color)
+            el.dataset.origColor = el.style.color;
+          if (!el.dataset.origBg && el.style.backgroundColor)
+            el.dataset.origBg = el.style.backgroundColor;
           el.style.color = '#F8F9F2';
           el.style.backgroundColor = '#1E1E1E';
         } else {
@@ -180,26 +182,8 @@
       document.getElementById('previewWindow').innerHTML = html;
     }
 
-    function copyToClipboard() {
-      const textarea = document.getElementById('output');
-      textarea.select();
-      textarea.setSelectionRange(0, 99999);
-      document.execCommand('copy');
-      alert('Signature HTML copied to clipboard!');
-    }
-
-    function downloadHTML() {
-      const content = document.getElementById('output').value;
-      const blob = new Blob([content], { type: 'text/html' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'email_signature.htm';
-      link.click();
-    }
-
     function cleanForApollo() {
       const rawHtml = document.getElementById('output').value;
-
       const parser = new DOMParser();
       const doc = parser.parseFromString(rawHtml, 'text/html');
 
@@ -222,6 +206,23 @@
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = 'download_apollo.html';
+      link.click();
+    }
+
+    function copyToClipboard() {
+      const textarea = document.getElementById('output');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      alert('Signature HTML copied to clipboard!');
+    }
+
+    function downloadHTML() {
+      const content = document.getElementById('output').value;
+      const blob = new Blob([content], { type: 'text/html' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'email_signature.htm';
       link.click();
     }
   </script>
